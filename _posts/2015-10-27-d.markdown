@@ -1,0 +1,80 @@
+---
+layout: post
+title:  "AngularJs - directive指令初探"
+date:   2015-10-27 11:00:00
+categories: angular
+---
+directive指令的作用：实现语义化标签
+ 
+我们常用的HTML标签是这样的：
+
+{% highlight ruby %}
+<div>
+    <span>内容</span>
+</div>
+{% endhighlight %}
+ 
+而使用AngularJS的directive（指令）机制，我们可以实现这样的东西：
+
+{% highlight ruby %}
+<selectbox>
+    <span>内容</span>
+</selectbox>
+{% endhighlight %}
+
+如何实现浏览器不认识的标签，其实就是把<selectbox>这种非标准标签替换成浏览器能识别的那些标准HTML标签，如：
+
+{% highlight ruby %}
+var appModule = angular.module('app', []);
+appModule.directive('selectbox', function() {
+    return {
+        restrict: 'E',
+        template: '<div><span>内容</span></div>',
+        replace: true
+    };
+});
+{% endhighlight %}
+    
+#### **restrict（变换）**
+
+EACM的子集的字符串，它限制directive为指定的声明方式。如果省略的话，directive将仅仅允许通过属性声明：
+ 
+E - 元素名称： <my-directive></my-directive>
+ 
+A - 属性名： <div my-directive=”exp”></div>
+ 
+C - class名： <div class=”my-directive:exp;”></div>
+ 
+M - 注释 ： <!-- directive: my-directive exp -->
+
+#### **transclude（变换）**
+
+{% highlight ruby %}
+var appModule = angular.module('app', []);
+appModule.directive('selectbox', function() {
+    return {
+        restrict: 'E',
+        template: '<div><span>内容</span><span ng-transclude></span></div>',
+        transclude: true
+    };
+});
+{% endhighlight %}
+    
+transclude的作用可以简化地理解成：把<selectbox>标签替换成我们所编写的HTML模板，但是<selectbox>标签的原有内容保持不变。
+
+#### **Linking function**
+
+{% highlight ruby %}
+link: function postLink(scope, element, attrs, ctrls) {
+{% endhighlight %}
+    
+link function负责注册DOM事件监听器，也可以进行DOM的更新操作。link function会在模版克隆操作完毕之后执行。这里存放着directive大多数的逻辑。
+
+> scope - Scope -被directive用于注册watches(http://docs.angularjs.org/api/ng.$rootScope.Scope#$watch)。
+
+> element - 元素实例 - directive使用的元素。只有在postLink function里面对子元素进行操作，才是安全的。因为子元素已经被link（与model连接吗？！）。
+
+> attrs - 属性实例 - 标准的当前元素的属性列表。在所有directive的linking function之间分享的。
+
+> ctrls - controller实例 -
+如果在当前元素的directive中，有其中一个定义了controller，那么可以在这里获取到该controller的实例。这个controller是在所有directive之间共享的，允许各个directive将controller当作一个它们之间沟通频道。

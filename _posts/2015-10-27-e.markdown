@@ -1,0 +1,349 @@
+---
+layout: post
+title:  "Hilo实现抽奖大转盘"
+date:   2015-10-27 13:00:00
+categories: hilo
+---
+Hilo可以简单理解为游戏引擎，如果不了解Hilo的可以[看这里](http://hilo-js.github.io/)
+
+大转盘交互和动画效果并不复杂，做了两个版本：第一个主要用Hilo的动画精灵实现，另一个全部用缓动Tween实现。第二个版本是考虑到扩展性，抽奖大转盘奖项多变，用动画精灵切图成本就很高，转起来也不如缓动来的流畅。
+
+先说第一个吧，直接上代码
+
+### 创建demo页面
+
+{% highlight ruby %}
+<!DOCTYPE html>
+<head>
+<title>幸运大转盘</title>
+...
+
+<style type="text/css">
+body{ padding: 0; margin: 0; font-size: 12px; background-color: #fff;} 
+body, html{ height: 100%; }
+.con { width: 650px; margin: 0 auto; }
+canvas { display: block; background: #fff; }
+</style>
+</head>
+<body>
+    <div class="con">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script type="text/javascript" src="src/hilo-standalone.js"></script>
+    <script type="text/javascript" src="src/ease.js"></script>
+    <script type="text/javascript" src="src/game.js"></script>
+    <script type="text/javascript" src="src/data.js"></script>
+    <script type="text/javascript" src="src/role.js"></script>
+    <script type="text/javascript" src="src/over-scene.js"></script>
+</body>
+</html>
+{% endhighlight %}
+
+页面底部引入Hilo脚本，创建canvas。
+
+canvas本身也是DOM元素，可以给它设置宽高、背景等样式。
+
+* ease.js -- Ease类包含为Tween类提供各种缓动功能的函数
+* game.js -- 主模块
+* data.js -- 游戏数据配置
+* role.js -- 大转盘类
+* over-scene.js -- 结束场景
+
+### 预加载图片
+
+{% highlight ruby %}
+Game.data = {
+    imgList: [
+        {id: 'bg', src: './images/bg.jpg'},
+        {id: 'pan', src: './images/pan.png'},
+        {id: 'start', src: './images/start.png'},
+        {id: 'over', src: './images/over.png'},
+        {id: 'number', src: './images/number.png'}
+    ]
+};
+    
+init: function(){    
+    this.queue = new Hilo.LoadQueue();
+    this.queue.add(this.data.imgList);
+    this.queue.on('complete', function (e) {
+        this.initStage();
+    }).start(); 
+}
+{% endhighlight %}
+
+为了让玩家有更流畅的游戏体验，图片素材一般需要预先加载。Hilo提供了一个队列下载工具LoadQueue，使用它可以预加载图片素材。
+
+### 初始化舞台
+{% highlight ruby %}
+initStage: function(){
+
+    //舞台
+    this.stage = new Hilo.Stage({
+        canvas: document.getElementById('canvas'),
+        width: this.width,
+        height: this.height,
+        scaleX: this.scale,
+        scaleY: this.scale
+    });
+    
+    //舞台更新
+    this.stage.onUpdate = this.onUpdate.bind(this);
+}
+{% endhighlight %}
+ 
+还需要一个定时器来不断更新和渲染舞台
+{% highlight ruby %}
+//设定舞台刷新频率为60fps
+this.ticker = new Hilo.Ticker(60);
+//把舞台加入到tick队列
+this.ticker.addTick(this.stage);
+//把Tween类加入到tick队列
+this.ticker.addTick(Hilo.Tween);
+//启动ticker
+this.ticker.start();
+{% endhighlight %}
+
+### 开始场景
+设置一个不动的游戏背景，不一定要用Bitmap，为了减少canvas的重复绘制，可以直接样式写入或者插入一个DOM
+{% highlight ruby %}
+initBg: function(){
+
+    // new 一个Bitmap实例
+    this.bg = new Hilo.Bitmap({
+        image: this.queue.get('bg').content,
+        rect: [0, 0, 650, 360],
+        x: 0,
+        y: 0
+    });
+
+    // 添加到舞台中
+    this.stage.addChild(this.bg);
+}
+{% endhighlight %}
+
+开始抽奖按钮
+{% highlight ruby %}
+initScenes: function(){
+    this.gameReadyScene = new Hilo.Bitmap({
+        image: Game.queue.get('start').content,
+        rect: [0, 0, 80, 80],
+        x: 140,
+        y: 135
+    }).addTo(this.stage);
+    
+    //绑定交互事件
+    this.stage.enableDOMEvent(Hilo.event.POINTER_START, true);
+    this.gameReadyScene.on(Hilo.event.POINTER_START, 
+    this.onStartTrigger.bind(this));
+},
+
+onStartTrigger: function(e){
+
+    //启动游戏场景
+    if(this.state !== 'over' && this.state !== 'playing') {
+        this.gameStart();
+    }  
+}
+{% endhighlight %}  
+
+### 创建大转盘类
+{% highlight ruby %}
+Game.Role = Hilo.Class.create({
+    Extends: Hilo.Container,
+    constructor: function () {
+        Game.Role.superclass.constructor.call(this, {
+            width: 280,
+            height: 280
+        });
+
+        this.x = 40;
+        this.y = 44;
+
+        this.initPan();
+        
+    },
+    initPan: function () {
+        var atlasData = Game.data.role.pan;
+        atlasData.image = Game.queue.get(atlasData.imageId).content;
+        this.panAtlas = new Hilo.TextureAtlas(atlasData);
+        this.panSprite = new Hilo.Sprite({
+            frames: this.panAtlas.getSprite('default'),
+            x: 0,
+            y: 0,
+            scaleX: 1,
+            scaleY: 1,
+            interval: 8,
+            timeBased: false,
+            paused: true,
+            onEnterFrame: function(frameIndex){
+                if(Game.state === 'over' && Game.callback && frameIndex == Game.score) {
+                    this.stop();
+                    Game.state = 'overcheck';
+
+                    //显示结束场景
+                    setTimeout(function(){
+                        Game.gameOverScene.show(1);
+                    },500);
+                }
+            }
+        });
+        this.addChild(this.panSprite);
+
+    }
+});
+{% endhighlight %} 
+
+由于转盘会不停转动，所以用精灵动画类Sprite来创建转盘，把timeBased设为false就以帧为基准，一帧帧播放，通过interval控制播放速度，通过获取当前帧来触发结束事件也确实不错，当然后来发现总帧数少的话其实动画就不流畅了。切图成本也相当高，大家感受下。
+![screenshot](http://img2.tbcdn.cn/L1/461/1/93fdfbd9fb4fa7fb0d3c7b4757c4029128ea636a)
+{% highlight ruby %}
+//初始化背景
+this.initBg();
+
+//初始化转盘
+this.role = new Game.Role();
+this.stage.addChild(this.role);
+
+//初始化开始场景
+this.initScenes();
+{% endhighlight %}     
+这里要注意叠加顺序，背景在最下面，其次转盘，最后开始按钮。
+
+### 开始游戏
+{% highlight ruby %}
+gameStart: function(){
+    this.state = 'playing';
+    this.role.panSprite.play();
+    
+    // 利用缓动给转盘加速减速
+    Hilo.Tween.to(Game.role.panSprite, {interval:1}, {
+        time:2000,
+        ease: Ease.Linear.EaseIn,
+        onComplete:function(){
+            Hilo.Tween.to(Game.role.panSprite, {interval:8}, {
+                delay:2000,
+                time:2000,
+                ease: Ease.Linear.EaseOut,
+                onComplete:function(){
+                    Game.gameOver();
+                }
+            });
+        }
+    });
+}
+{% endhighlight %}     
+这里值得说的是，由于精灵动画是匀速的，所以要实现大转盘由慢到快再由快到慢的效果，只能借助缓动Tween类，配合Ease类的线性匀速缓动函数，改变interval的值就可以做到。
+
+### 结束场景
+{% highlight ruby %}
+Game.OverScene = Hilo.Class.create({
+    Extends: Hilo.Container,
+    constructor: function(properties){
+        OverScene.superclass.constructor.call(this, properties);
+        this.init(properties);
+    },
+
+    init: function(properties){
+    
+        // 中奖结果面板
+        var board = new Hilo.Bitmap({
+            id: 'board',
+            image: properties.image,
+            rect: [0, 0, 590, 298]
+        });
+        
+        // 中奖结果数字
+        var scoreLabel = new Hilo.BitmapText({
+            id: 'score',
+            glyphs: properties.numberGlyphs,
+            scaleX: 0.5,
+            scaleY: 0.5,
+            letterSpacing: 4,
+            text: 0
+        });
+        
+        // 透明遮罩曾
+        var whiteMask = new Hilo.View({
+            id: 'mask',
+            width: this.width,
+            height: this.height,
+            alpha: 0.0
+        }).setBgFill('#fff');
+
+        board.x = this.width - board.width >> 1;
+        board.y = this.height - board.height >> 1;
+        scoreLabel.x = board.x + board.width - 140 >> 0;
+        scoreLabel.y = board.y + 90;
+        
+        this.addChild(board, scoreLabel, whiteMask);
+    },
+
+    show: function(score){
+        this.visible = true;
+        this.getChildById('score').text = score;
+        this.getChildById('mask').alpha = 1.0;
+
+        Hilo.Tween.from(this.getChildById('board'), {alpha:0, y:this.getChildById('board').y+150}, {time:200, delay:200});
+        Hilo.Tween.from(this.getChildById('score'), {alpha:0, y:this.getChildById('score').y+150}, {time:200, delay:200});
+        Hilo.Tween.to(this.getChildById('mask'), {alpha:0}, {time:500});
+    }
+});
+{% endhighlight %}     
+结束场景显示的时候，还带动画效果显示出玩家的中奖结果。
+
+### 如何全部用缓动实现效果更好的大转盘呢
+首先大转盘类改用Bitmap
+{% highlight ruby %}
+Game.Role = Hilo.Class.create({
+    Extends: Hilo.Container,
+    constructor: function () {
+        Game.Role.superclass.constructor.call(this, {
+            width: 280,
+            height: 280
+        });
+
+        this.x = 40;
+        this.y = 44;
+        this.initPan();
+        
+    },
+    initPan: function () {
+        this.pan = new Hilo.Bitmap({
+            image: Game.queue.get('pan').content,
+            rect: [0, 0, 280, 280],
+            x: 140,
+            y: 140,
+            pivotX: 140,
+            pivotY: 140
+        });
+           
+        this.addChild(this.pan);
+    }
+});
+{% endhighlight %} 
+这里设置pivotX: 140,pivotY: 140为宽高都是280转盘的中心点，这样转动时才能围绕圆心转。
+
+注意中心点偏移后，位移x,y也要相应改变。
+
+其他代码保持不变，就这一段代码，转盘就要开始转啦！
+{% highlight ruby %}
+gameStart: function(){
+    this.state = 'playing';
+
+    Hilo.Tween.to(Game.role.pan, {rotation:1890}, {
+        time: 8000,
+        ease: Ease.Cubic.EaseInOut,
+        onComplete: function(){
+            Game.gameOver();
+        }
+    });
+}
+{% endhighlight %}     
+是不是比精灵动画简单很多呢。下面解释下参数吧：
+
+rotation:1890是如何得来的，其实就是360*5+30*3，解释下：在8秒内先转5圈（一圈360度），然后停在第三格（假设一共有12格奖项的话）。
+
+ease: Ease.Cubic.EaseInOut，三次方缓动函数，给大家看张图就懂了吧
+![screenshot](http://img2.tbcdn.cn/L1/461/1/526ddb5944ed0f7ea2f2fc8edba08d994e408e59)
+
+大转盘就会由慢到快再由快到慢转动起来。

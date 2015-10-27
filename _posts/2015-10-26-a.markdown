@@ -1,0 +1,52 @@
+---
+layout: post
+title:  "两列展示的图片如何更好地支持响应式"
+date:   2015-10-26 08:00:00
+categories: css
+---
+
+如果没法确定图片的宽高比
+
+如果图片需要自适应多种屏幕宽度
+
+且两列展示
+
+如何更好地支持这种响应式？
+
+在去逛街项目里有个实践：
+
+在两列场景下，图片外层容器宽度取百分比，列间距是10px
+
+less代码：
+
+{% highlight ruby %}
+li {
+    float: left;
+    width: 48.4%;
+    width: e("calc(50% - 5px)");
+    &:nth-child(even) {
+        float: right;
+    }
+    img {
+        display: block;
+        width: 100%;
+        background-size: cover;
+        background-position: 50% 50%;
+    }
+}
+{% endhighlight %}
+
+html代码：
+
+{% highlight ruby %}
+<li>
+    <a href="#">
+        <img src="http://a.tbcdn.cn/g/s.gif" style="background-image:url({{=item.picUrl}})" alt="" />
+    </a>
+</li>
+{% endhighlight %}
+其中[http://a.tbcdn.cn/g/s.gif](http://a.tbcdn.cn/g/s.gif)是1x1像素的透明图片
+
+这样可以巧妙做到：不管图片宽高比如何，图片容器都能等宽高地进行缩放，设置background-size: cover也能使背景图片等比例缩放去填满图片框
+
+具体实现可参考[去逛街](http://h5.m.taobao.com/goshopping/index.html)

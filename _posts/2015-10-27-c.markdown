@@ -1,0 +1,38 @@
+---
+layout: post
+title:  "基于less如何更好地编写公用样式"
+date:   2015-10-27 10:00:00
+categories: css
+---
+
+我们在编写样式代码时，不免会写一些公用样式，比如clearfix、圆角、css3特效、透明背景、button，随着业务需求增加，这个公用样式表肯定会越来越大，而有些页面只需要其中一小部分公用样式，如果去做颗粒化拆分然后import进来又显得小题大做，那么问题来了。平时使用less使用较多的可能是变量和嵌套，带参数混合用的较少，其实可以利用这个特性来建less基础函数库，这样就不会对外输出，只会作为编译依赖。比如：
+
+{% highlight ruby %}
+// 未知尺寸图片居中函数
+.image-center(@width, @height){
+
+  @_fontsize: round(@height * 0.873);
+ 
+  width: ~'@{width}px';
+  height: ~'@{height}px';
+  overflow: hidden;
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  *display: block;//IE hack
+  *font: ~"@{_fontsize}px/1em Arial";
+  
+  img{
+    max-height: ~'@{height}px';
+    max-width: ~'@{width}px';
+    vertical-align: middle;
+  }
+}
+// 页面级样式表调用图片居中
+.imgbox{
+    .image-center(100,100);
+    ...
+}
+{% endhighlight %}
+
+这样可以做到按需去取需要的公用样式，而这个公用样式表不会输出这些基础函数样式。

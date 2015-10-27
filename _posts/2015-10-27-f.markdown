@@ -1,0 +1,130 @@
+---
+layout: post
+title:  "用rem实现响应式初探"
+date:   2015-10-27 15:00:00
+categories: css
+---
+
+rem是相对长度单位。相对于根元素(即html元素)font-size计算值的倍数。
+
+就不详细说px,em,rem的区别了，网上可以搜到详细的解说，简单说rem和em的区别在于前者是相对于根元素，后者是会继承父级元素的字体大小。这也就决定了rem更适合用来实现响应式。
+
+![screenshot](http://img2.tbcdn.cn/L1/461/1/ac9bb55e76d601cd16fbcdf37917764c724a7941)
+
+
+可以看到rem的兼容性在H5页面里使用完全没问题。
+
+接下来就说说怎么使用rem了，目前公司也有用rem来实现的高清方案，比如用js根据屏幕宽度来计算根元素的font-size，进行viewport设置。
+
+{% highlight ruby %}
+/**
+ * 高清方案
+ */
+rem: function() {
+    var isIphone = window.navigator.appVersion.match(/iphone/gi) ? true : false;
+    var highIphone = window.navigator.appVersion.match(/iphone\s*os\s*(7|8|9|10)/gi) ? true : false;
+    if (highIphone || !isIphone) {
+        var h;
+        var dpr = window.navigator.appVersion.match(/iphone/gi) ? window.devicePixelRatio : 1;
+        var scale = 1 / dpr;
+        var docEl = document.documentElement;
+        var metaEl = document.createElement('meta');
+
+        function setUnitA() {
+            window.rem = docEl.getBoundingClientRect().width / 16;
+            console.log('rem:' + window.rem);
+            docEl.style.fontSize = window.rem + 'px';
+        }
+
+        window.dpr = dpr;
+        docEl.setAttribute('data-dpr', dpr);
+        metaEl.setAttribute('name', 'viewport');
+        metaEl.setAttribute('content', 'initial-scale=' + scale + ', maximum-scale=' + scale + ', minimum-scale=' + scale + ', user-scalable=no');
+        
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) {
+                clearTimeout(h);
+                h = setTimeout(setUnitA, 300);
+            }
+        }, false);
+
+        if (docEl.firstElementChild) {
+            docEl.firstElementChild.appendChild(metaEl);
+        } else {
+            var wrap = document.createElement('div');
+            wrap.appendChild(metaEl);
+            document.write(wrap.innerHTML);
+        }
+        setUnitA(); 
+    }
+}
+{% endhighlight %}
+
+具体如何根据屏幕宽度计算可以参考[栅格系统](http://gitlab.alibaba-inc.com/xuewei.lxw/m-base/blob/master/README.md)、[rem基准计算](http://gitlab.alibaba-inc.com/tbc/m-base/blob/master/README.md)。
+
+在最近的项目中也去尝试了rem实现响应式，现在就来说说我的简单做法：
+
+{% highlight ruby %}
+html {
+    font-size : 20px; /* 不要设置为10px，设置宽高的rem值浏览器会按照12px去计算 */
+}
+@media only screen and (min-width: 401px){
+    html {
+        font-size: 25px !important;
+    }
+}
+@media only screen and (min-width: 428px){
+    html {
+        font-size: 26.75px !important;
+    }
+}
+@media only screen and (min-width: 481px){
+    html {
+        font-size: 30px !important;
+    }
+}
+@media only screen and (min-width: 569px){
+    html {
+        font-size: 35px !important;
+    }
+}
+@media only screen and (min-width: 641px){
+    html {
+        font-size: 40px !important;
+    }
+}
+{% endhighlight %}
+
+这里利用media query去做屏幕适配，虽然不能覆盖所有尺寸，但基本可以适配大部分机型了。320宽度下对应20px，640宽度下双倍大就是20x(640/320)=40px，其他宽度以此类推去计算。
+
+一般视觉稿都是按照640给出的，所以按照640宽度（根元素40px）为标准去计算rem也是挺好的。
+
+#### 给字体设置rem
+如果页面里的rem值都以320宽度为标准去做适配，20px对应1rem。比如：给12px的字体设置rem就是0.6rem（12px/20px）。这里值得一提的是，虽然根元素设置为10px更利于计算rem，但是浏览器会默认最小fontsize为12px，后面用rem设置宽高会按12px去算就会失准。
+
+
+#### 给宽高、margin设置rem
+还是以320宽度视觉稿为标准
+{% highlight ruby %}
+.box {
+    margin: 10px;
+    width: 120px;
+    height: 120px;
+}
+{% endhighlight %}
+
+换算成rem就是
+
+{% highlight ruby %}
+.box {
+    margin: 0.5rem; /* 10px = 0.5rem * 20px */
+    width: 6rem; /* 120px = 6rem * 20px */
+    height: 6rem;
+}
+{% endhighlight %}
+当然也可以用百分比，在流布局里没问题，比如等宽两列设置为50%，但是如果遇到设置高度时，就不好用百分比了，其实很多场景下用rem比百分比更加灵活。
+
+写了一个demo，里面包含了如何给字体，高度，margin设置rem实现响应式
+详见[demo](http://zhifeng.alidemo.cn/rem/index.html)
+
+在这里提供一个px,em,rem单位转换工具[http://pxtoem.com/](http://pxtoem.com/)

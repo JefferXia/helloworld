@@ -1,0 +1,54 @@
+---
+layout: post
+title:  "flipsnap移动端滑动框架"
+date:   2015-10-27 09:00:00
+categories: js
+---
+
+移动端开发webapp经常需要做滑动效果，整页滑动或者是局部滑动。
+
+flipsnap.js 是利用css3特效去实现各种效果的滑动，原生js编写，轻量级，压缩后不足10k
+
+提供的几个配置项和方法都非常实用：
+
+{% highlight ruby %}
+// 1. 基础水平滑动
+Flipsnap('.flipsnap');
+
+// 2. 自定义滑动距离
+Flipsnap('.flipsnap', {
+    distance: 230
+});
+
+// 3. 最多移动次数
+Flipsnap('.flipsnap', {
+    distance: 160,
+    maxPoint: 3
+});
+
+// 4. 绑定事件，可以为滑动到当前项时添加样式
+var $pointer = $('.pointer span');
+var flipsnap = Flipsnap('.flipsnap', {
+    distance: 230
+});
+flipsnap.element.addEventListener('fspointmove', function(e) {
+    $pointer.filter('.current').removeClass('current');
+    $pointer.eq(flipsnap.currentPoint).addClass('current');
+}, false);
+
+// 5. refresh非常有用，在添加/删除滑动项后刷新，或者是屏幕切换时重新计算
+flipsnap.refresh();
+
+// 6. 滑动到指定项
+flipsnap.moveToPoint(1);
+
+还有toNext, toPrev方法，disableTouch配置是否开启触摸滑动
+{% endhighlight %}
+
+配合好css可以满足各种滑动需求
+
+![screenshot](http://img1.tbcdn.cn/L1/461/1/e57ad0a2638dc13b79b92c1c576b1d9ec391d701)
+
+附上git地址 [https://github.com/pxgrid/js-flipsnap/][jekyll]
+
+[jekyll]:      https://github.com/pxgrid/js-flipsnap/
