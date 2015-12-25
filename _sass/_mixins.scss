@@ -1,0 +1,233 @@
+@mixin transition($d: 300ms) {
+    -webkit-transition-duration: $d;
+    transition-duration: $d;
+}
+@mixin delay($d...) {
+    -webkit-transition-delay: $d;
+    transition-delay: $d;
+}
+@mixin transform($t...) {
+    -webkit-transform: $t;
+    transform: $t;
+}
+@mixin transform-origin($to...) {
+    -webkit-transform-origin: $to;
+    transform-origin: $to;
+}
+@mixin translate3d($x:0, $y:0, $z:0) {
+    -webkit-transform: translate3d($x,$y,$z);
+    transform: translate3d($x,$y,$z);
+}
+@mixin animation($a) {
+    -webkit-animation: $a;
+    animation: $a;
+}
+@mixin hairline($position, $color) {
+  @if $position == top {
+    &:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: auto;
+        right: auto;
+        height: 1px;
+        width: 100%;
+        background-color: $color;
+        display: block;
+        z-index: 15;
+        @include transform-origin(50% 0);
+        html.pixel-ratio-2 & {
+          @include transform(scaleY(0.5));
+        }
+        html.pixel-ratio-3 & {
+          @include transform(scaleY(0.33));
+        }
+    }
+  }
+  @else if $direction == left {
+    &:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: auto;
+        right: auto;
+        width: 1px;
+        height: 100%;
+        background-color: $color;
+        display: block;
+        z-index: 15;
+        @include transform-origin(0 50%);
+        html.pixel-ratio-2 & {
+          @include transform(scaleX(0.5));
+        }
+        html.pixel-ratio-3 & {
+          @include transform(scaleX(0.33));
+        }
+    }
+  }
+  @else if $direction == bottom {
+    &:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        right: auto;
+        top: auto;
+        height: 1px;
+        width: 100%;
+        background-color: $color;
+        display: block;
+        z-index: 15;
+        @include transform-origin(50% 100%);
+        html.pixel-ratio-2 & {
+          @include transform(scaleY(0.5));
+        }
+        html.pixel-ratio-3 & {
+          @include transform(scaleY(0.33));
+        }
+    }
+  }
+  @else if $direction == right {
+    &:after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        left: auto;
+        bottom: auto;
+        width: 1px;
+        height: 100%;
+        background-color: $color;
+        display: block;
+        z-index: 15;
+        @include transform-origin(100% 50%);
+        html.pixel-ratio-2 & {
+          @include transform(scaleX(0.5));
+        }
+        html.pixel-ratio-3 & {
+          @include transform(scaleX(0.33));
+        }
+    }
+  }
+}
+
+%clearfix {
+    &:before,
+    &:after {
+        content: " ";
+        display: table;
+    }
+    &:after {
+        clear: both;
+    }
+}
+
+// 未知尺寸图片居中
+@mixin image-center($width: 100px, $height: 100px){
+
+  $fontsize: round($height * 0.873);
+
+  width: $width;
+  height: $height;
+  overflow: hidden;
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+
+  *display: block;
+  *font-size: $fontsize;
+
+  img{
+    max-height: $height;
+    max-width: $width;
+    vertical-align: middle;
+  }
+}
+
+// 单行文字截断
+%text-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// 多行文字截断
+@mixin text-overflow-lines($line: 2){
+    display: -webkit-box;
+    -webkit-line-clamp: $line;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+%border-box {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+%scrollable {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+%flex {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+}
+%flex-avg {
+    -webkit-box-flex: 1;
+    -ms-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
+    display: block;
+    width: 1px;
+}
+
+// 圆角
+@mixin border-radius($radius: 5px) {
+	-webkit-border-radius: $radius;
+	border-radius: $radius;
+}
+
+// 阴影
+@mixin box-shadow($shadow: 5px 5px 10px #cccccc) {
+  -webkit-box-shadow: $shadow;
+  box-shadow: $shadow;
+}
+
+// 响应式（基础的单位1rem对应的px值）
+html {
+    font-size : 20px;
+}
+
+@mixin min-screen($res){
+    @media only screen and (min-width: $res){
+        @content;
+    }
+}
+
+@include min-screen(360px) {
+    html {font-size: 22.5px !important;}
+}
+@include min-screen(375px) {
+    html {font-size: 23.4375px !important;}
+}
+@include min-screen(401px) {
+    html {font-size: 25px !important;}
+}
+@include min-screen(414px) {
+    html {font-size: 25.875px !important;}
+}
+@include min-screen(428px) {
+    html {font-size: 26.75px !important;}
+}
+@include min-screen(481px) {
+    html {font-size: 30px !important;}
+}
+@include min-screen(569px) {
+    html {font-size: 35px !important;}
+}
+@include min-screen(640px) {
+    html {font-size: 40px !important;}
+}

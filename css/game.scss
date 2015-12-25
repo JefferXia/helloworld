@@ -1,0 +1,75 @@
+---
+# Only the game Sass file needs front matter (the dashes are enough)
+---
+@charset "utf-8";
+
+// Our variables
+$text-color:       #333;
+$blue-color:       #3fb8b3;
+$background-color: #fff;
+
+$grey-color:       #828282;
+$grey-color-light: lighten($grey-color, 40%);
+$grey-color-dark:  darken($grey-color, 25%);
+
+
+// Import partials from `sass_dir` (defaults to `_sass`)
+@import
+    "mixins",
+    "reset"
+;
+
+body {
+	background-color: #56638d;
+}
+.spinner {
+	position: absolute;
+	z-index: 999;
+	top: 50%;
+	left: 50%;
+	margin: -30px 0 0 -25px;
+	width: 50px;
+	height: 50px;
+	text-align: center;
+
+	-webkit-animation: sk-rotate 2.0s infinite linear;
+	animation: sk-rotate 2.0s infinite linear;
+}
+.dot1, .dot2 {
+	width: 60%;
+	height: 60%;
+	display: inline-block;
+	position: absolute;
+	top: 0;
+	background-color: #45c3ab;
+	border-radius: 100%;
+
+	-webkit-animation: sk-bounce 2.0s infinite ease-in-out;
+	animation: sk-bounce 2.0s infinite ease-in-out;
+}
+.dot2 {
+	top: auto;
+	bottom: 0;
+	background-color: #fd6860;
+	-webkit-animation-delay: -1.0s;
+	animation-delay: -1.0s;
+}
+
+@-webkit-keyframes sk-rotate { 100% { -webkit-transform: rotate(360deg) }}
+@keyframes sk-rotate { 100% { transform: rotate(360deg); -webkit-transform: rotate(360deg) }}
+
+@-webkit-keyframes sk-bounce {
+  0%, 100% { -webkit-transform: scale(0.0) }
+  50% { -webkit-transform: scale(1.0) }
+}
+
+@keyframes sk-bounce {
+  0%, 100% { 
+    transform: scale(0.0);
+    -webkit-transform: scale(0.0);
+  } 50% { 
+    transform: scale(1.0);
+    -webkit-transform: scale(1.0);
+  }
+}
+
