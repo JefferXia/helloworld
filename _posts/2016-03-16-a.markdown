@@ -1,0 +1,126 @@
+---
+layout: post
+title:  "gulp+browserify的实践体会"
+date:   2016-03-16 18:07:38
+categories: js
+---
+
+### 先说下为什么不用grunt
+
+grunt基于文件的机制，导致了任务之间没有信息传递。每一个任务都需要做重复的打开、保存、关闭操作无疑影响效率。gulp基于stream，gulp的特点在于单入口模式，文件打开、保存、关闭均一次，从内存拿数据，肯定比从硬盘拿数据快。
+
+grunt的配置项繁杂算是公认的弊病，而gulp配置项精简，奉行“写程序而不是写配置”的宗旨。
+
+grunt插件很难遵守单一责任原则。因为 Grunt 的 API 设计缺憾，使得许多插件不得不负责一些和其主要任务无关的事情。gulp插件都很简单，只负责完成一件事。
+
+### 为什么选择browserify
+
+早前用过webpack，不太喜欢它大一统的机制，用黑魔法把所有的css、js编译打包到一块，这种机制本身可能会带来一些坑，更别说调试起来有多痛苦。
+
+后来用了browserify，有一种相见恨晚的感觉，比起RequireJS，SeaJS这些模块化加载器：
+不需要在js外面额外包个`define(function(require, exports, module) {})`，不用遵循AMD或者是CMD规范，代码更符合Node.js 风格的 CommonJS 模块编写规范。browserify有基于npm的依赖自动管理功能，可以自动下载一个类库的依赖，并将所有依赖打包成一个js文件， 并且页面不需要引入browserify。
+
+首先，安装Browserify。
+
+{% highlight ruby %}
+$ npm install -g browserify
+{% endhighlight %}
+
+然后，编写两个需要被require的文件。
+
+{% highlight ruby %}
+// a.js
+module.exports = 'a';
+
+// lib/b.js
+module.exports = function() {
+    ...
+};
+{% endhighlight %}
+
+然后，编写主入口文件。
+
+{% highlight ruby %}
+// entry.js
+var a = require('./a.js');
+var b = require('./lib/b.js');
+...
+{% endhighlight %}
+
+上面的代码是CommonJS格式，无法在浏览器中运行。需要Browserify将上面代码编译为浏览器脚本。
+
+{% highlight ruby %}
+$ browserify entry.js > bundle.js
+{% endhighlight %}
+
+生成的bundle.js可以在html中引入。
+
+{% highlight ruby %}
+<script src="bundle.js"></script>
+{% endhighlight %}
+
+### gulp+browserify
+
+上面说了gulp的优势，在较大的项目中肯定要结合gulp来发挥browserify的作用，用一个命令去编译所有需要引入依赖的js文件。
+
+gulp-browserify 被加入黑名单后，已不再有人维护和更新，还请引入browserify插件。下面是我写的一个gulpfile.js，演示多文件批量browserify引入依赖模块并打包压缩。
+
+{% highlight ruby %}
+var gulp = require('gulp');
+var concat = require('gulp-concat'); // 合并文件
+var uglify = require('gulp-uglify');  // 压缩文件
+var rename = require('gulp-rename');  // 重命名文件名
+var server = require('gulp-server-livereload'); 
+var browserify = require('browserify');  
+var source = require('vinyl-source-stream'); 
+var buffer = require('vinyl-buffer');
+var globby = require('globby'); // 匹配文件
+
+gulp.task('browserify', function() {  
+
+  return globby(['./src/pages/**/*.js']).then(function(entries) {
+    // 遍历文件
+    entries.forEach(function(file) {
+      var filename = file.substr(file.lastIndexOf('/') + 1); // 取出文件名
+      browserify(file)
+        .bundle()
+        .pipe(source(filename))  // 将常规流转换为包含 Stream 的 vinyl 对象
+        .pipe(buffer())     // 将 vinyl 对象内容中的 Stream 转换为 Buffer
+        .pipe(uglify())
+        .pipe(rename({
+          suffix: '' // 后缀可加.min
+        }))
+        .pipe(gulp.dest('./build/js')); // 处理后的文件输出路径
+    });
+
+  }).catch(function(err) {
+    console.log(err);
+  });
+  
+});
+// 监视文件的变化并运行相应的任务
+gulp.task('watch', function () {
+    //当所有js文件发生改变时，调用browserify任务
+    gulp.watch(['./src/**/*.js'], ['browserify']);
+});
+
+// 创建一个静态服务器
+gulp.task('server', function() {
+  gulp.src('./')
+    .pipe(server({
+      livereload: true, // 实时自动刷新页面
+      directoryListing: true,
+      open: true
+    }));
+
+  gulp.watch(['./src/**/*.js'], ['browserify']);
+}); 
+{% endhighlight %}
+把常规流转成 vinyl 对象流是在 gulp 中直接使用 browserify 的关键点。
+批量browserify文件先用globby去匹配到js入口文件，然后forEach遍历文件去实现单个入口文件的browserify。
+
+参考文献：
+
+[https://github.com/substack/stream-handbook](https://github.com/substack/stream-handbook)
+[http://browserify.org/](http://browserify.org/)
+[http://www.atatech.org/articles/28878](http://www.atatech.org/articles/28878)

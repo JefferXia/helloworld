@@ -1,0 +1,266 @@
+---
+layout: post
+title:  "React+JSX+ES6+Babel+Webpack"
+date:   2016-01-08 20:05:00
+categories: react
+---
+
+### React 是什么？
+React来自Facebook，于2013年开源。可以注意到版本还没有到1.0, 普遍应用到大部分产品中还需要一定的时间。2015年3月份，FaceBook发布了React Native，一个用react来构建native app的框架。
+
+这里说的React是一个javascript的类库，用于构建用户界面，仅仅是 VIEW 层。React 提供了模板语法以及一些函数钩子用于基本的 HTML 渲染。这就是 React 全部的输出——HTML。你把 HTML / JavaScript 合到一起，被称为“组件”，允许把它们自己内部的状态存到内存中（比如在一个选项卡中哪个被选中），不过最后你只是吐出 HTML。很明显，你没办法单单使用 React 来创建一个功能完善的动态应用。
+
+让我们来看看一个简单React示例.
+{% highlight ruby %}
+var Hello = React.createClass({  
+    render: function() {
+        return <div>Hello {this.props.name}</div>;
+    }
+});
+React.render(<Hello name="World" />, document.getElementById('container'));
+{% endhighlight %}
+
+### JSX:
+
+是一个看起来很像 XML 的 JavaScript 语法扩展，可以在js代码中直接定义html树形结构，提高开发效率和维护性。
+
+用JSX去写上面的代码，会被编译成 JavaScript，因此实际上会变成：
+{% highlight ruby %}
+var Hello = React.createClass({
+	displayName: "Hello",  
+    render: function() {
+        return React.createElement("div", null, "Hello ", this.props.name);
+    }
+});
+React.render(React.createElement(Hello, {name: "World"}), document.getElementById('container'));
+{% endhighlight %}
+这些对象组成了虚拟 DOM 的实现，React 首先在内存中对应用的整个结构进行了组装。然后它会把这个结构装换成实际的 DOM 节点并将其插入浏览器的 DOM 中。
+
+
+### ES6:
+
+ECMAScript6（以下统称ES6），是ECMAScript标准的最新版本。[ECMAScript6入门](http://es6.ruanyifeng.com/#docs/style)
+
+### Babel:
+
+是一个转换编译器，可以把jsx转换为原生js，es6转换为es5(大部分都能转换)。[Babel官网](https://babeljs.io/)
+
+介绍两种常用的使用方式：
+
+* 一种是浏览器来编译，因为实时编译会很慢，所以适合代码量比较小的。只需在html中引用：
+{% highlight ruby %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+{% endhighlight %}
+
+* 一种是本地使用。通过npm安装，在webpack中配置：
+{% highlight ruby %}
+//在webpack.config.js文件中配置
+module.exports = {
+    module: {
+        loaders: [{
+        test: /\.jsx?$/,
+        loader: 'babel'
+        }]
+    }
+}
+{% endhighlight %}
+
+可以在本地编译好代码后，再将编译后的代码给html引用，提高性能，适合大项目。
+
+### Webpack:
+
+是一个模块加载器，能处理依赖关系，解析出模块之间的依赖然后打包。能被模块化的不再限于js,还支持css、less、scss、图片，扩展性强，插件机制完善。
+
+[https://github.com/webpack](https://github.com/webpack)
+
+### 搭建环境
+
+配置package.json文件，npm install安装这些插件
+
+{% highlight ruby %}
+"devDependencies": {
+	"babel-core": "^6.3.26",
+	"babel-loader": "^6.2.0",
+	"babel-preset-es2015": "^6.3.13",
+	"babel-preset-react": "^6.3.13",
+	"react": "^0.14.3",
+	"react-dom": "^0.14.3",
+	"style-loader": "^0.13.0",
+	"css-loader": "^0.23.1",
+	"less": "^2.5.3",
+	"less-loader": "^2.2.2",
+	"webpack": "^1.12.9",
+	"webpack-dev-server": "^1.14.0"
+}
+{% endhighlight %}
+
+创建webpack.config.js,并配置
+
+{% highlight ruby %}
+//webpack.config.js 文件内容
+var path = require('path');
+
+module.exports = {
+  entry: {
+    'index': './index.js' //key只是个名字，可以自由改
+  },
+  output: {
+    path: './build',
+    filename: 'entry.js' //也可以动态生成文件名 filename:'[name].js',将根据entry中的key生成名字
+  },
+  module: {
+    loaders: [
+      {
+        test: /\.jsx?$/,
+        loader: 'babel',
+        // babel6 才需要配置这个，presets里面两个预编译插件，前一个用于编译es6，后一个用于编译react。按需配置。这个工程都需要。
+        query:{
+          presets: ['es2015','react']
+        }
+      },
+      { test: /\.css$/, loader: 'style!css' },
+      { test: /\.less/, loader: 'style-loader!css-loader!less-loader'}
+      
+      // { 
+      //   test: /\.(png|jpg)$/,
+      //   loader: 'url-loader?limit=10000' // 图片资源在小于10k时自动处理为base64图片的加载器
+      // }
+    ]
+  }
+};
+{% endhighlight %}
+
+这里要使用babel来编译jsx和es6的代码。webpack从entry拿到目标文件，通过loaders进行编译，从output输出，其他功能由plugins引入。
+
+### 开始编码
+
+#### 主页面index.html
+
+{% highlight ruby %}
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta content="yes" name="apple-mobile-web-app-capable" />
+  <meta content="yes" name="apple-touch-fullscreen" />
+  <meta content="telephone=no,email=no" name="format-detection" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 导航 -->
+  <div id="navbar" class="navbar"></div>
+
+  <script src="build/entry.js"></script>
+  
+</body>
+</html>
+{% endhighlight %}
+
+#### 入口文件index.js
+
+{% highlight ruby %}
+require('./style/style.less');
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Base from './base.js';
+import NavBar from  './components/navbar.jsx'; // tab栏
+
+var dataNav = [{
+    listtype: '1',
+    active: 'active',
+    text: '正在疯抢'
+}, {
+    listtype: '2',
+    active: '',
+    text: '即将开抢'
+}];
+
+ReactDOM.render(<NavBar data={dataNav} />,
+  document.getElementById('navbar')
+);
+{% endhighlight %}
+
+#### tab选项卡组件 navbar.jsx
+
+{% highlight ruby %}
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+class NavBar extends React.Component{
+	constructor(props) {
+	    super(props);
+	    this.state={
+	    	isTab1Active: false,
+	    	isTab2Active: false
+	    };
+	}
+    render() {
+	    // 遍历后端给的数据，并且插入
+	    var d = this.props.data;
+	    if(this.state.isTab1Active) {
+	    	d[0].active = 'active';
+	    	d[1].active = '';
+	    } else if(this.state.isTab2Active) {
+	    	d[1].active = 'active';
+	    	d[0].active = '';
+	    }
+	    return <div className="navbar-inner">
+	        	<a className={d[0].active} onClick={this.handleClick.bind(this)}>
+	              {d[0].text}
+	            </a>
+	            <a className={d[1].active} onClick={this.handleClick.bind(this)}>
+	              {d[1].text}
+	            </a>
+	        </div>;
+    }
+    handleClick(event) { 
+    	if(event.target.innerText == '正在疯抢'){
+	    	this.setState({isTab1Active: true, isTab2Active: false});
+	    	
+	    } else if(event.target.innerText == '即将开抢') {
+	    	this.setState({isTab1Active: false, isTab2Active: true});
+	    	
+	    }
+    }
+}
+module.exports = NavBar;
+{% endhighlight %}
+
+### 虚拟的DOM就是快
+
+我们已经讨论过, 操作 DOM 消耗大得离谱，因此它必须以尽可能少的时间完成。
+
+React 的虚拟 DOM 使得两棵 DOM 结构的比对真正快起来，并且能确切的找到它们之间有什么变化. 如此，React 就能计算出更新 DOM 所需要做出的最小变更。
+
+实话说，React 能比对两棵 DOM 树，找出它所要执行的最小操作集。这有两个意义:
+
+如果一个带有文本的输入框被重新渲染，React 会知道它有的内容, 它不会碰那个碰那个输入框。不会有状态发生丢失的!
+
+比对虚拟 DOM 开销一点也不昂贵，因此我们想怎么比对都可以。当其准备好要对 DOM 进行实际的修改时，它只会进行最少量的操作。没有额外的拖慢布局之虞!
+
+### 项目实战
+
+项目采用React+JSX+ES6+Babel+Webpack
+
+具体代码放到gitlab了：
+[http://gitlab.alibaba-inc.com/zhifeng.xzf/react_coupon](http://gitlab.alibaba-inc.com/zhifeng.xzf/react_coupon)
+
+### 总结感想
+
+展示型的页面真的不适合react，会降低编码效率。
+
+缺乏现成的组件库，需要造轮子。
+
+React更适合富交互性的动态页面，能提升页面的交互体验。
+
+这是一次很好的试炼，理解了虚拟DOM和React对于view层的构建思路，希望以后用得上
+
+参考文献：
+
+[我是怎样克服对 React 的恐惧，然后爱上 React 的](http://www.oschina.net/translate/how-i-learned-to-stop-worrying-and-love-react)
+
+[官方中文文档](http://reactjs.cn/react/docs/getting-started.html)
+
+[ReactJS 傻瓜教程](http://zhuanlan.zhihu.com/FrontendMagazine/19896745)
