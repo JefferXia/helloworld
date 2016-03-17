@@ -1,0 +1,112 @@
+---
+layout: post
+title:  "总结做H5遇到的坑"
+date:   2015-12-03 17:39:16
+categories: mobile
+---
+
+### 移动端无法准确判断出checkbox的选中状态
+
+在移动端，checkbox选中状态下获取的.attr(‘checked’) 或者prop(‘checked’) 并不总是 true，如果点击快一点经常会失准，实际交互中会导致选中了但没触发后续动作。 
+
+1、当checkbox选中时加一个class，同时也可以用class去展现checkbox选中的样式，通过判断有无这个class来判断是否选中，这样绝不会错！
+
+2、用:checked选择器，查了中文版的w3school，居然只有Opera支持，查了英文版发现除了IE6-8其实都支持，所以在端移动端用完全没问题。
+
+![1](http://img4.tbcdn.cn/L1/461/1/0b8fc7ab42cfd84f991cb36fd4d9ca6686c5e309.png)
+
+{% highlight ruby %}
+// css
+input:checked + label {
+     color: red;   
+}
+
+// js判断是否选中
+if($('input[name="ck"]:checked')[0]) {}
+
+// js选中
+$('input[name="ck"]').attr("checked", true).prop("checked", true);
+{% endhighlight %}
+
+
+### 1像素边框引起的页面内容溢出
+
+用flexbox去做等分两列的时候，中间有一根分割线，如果用border去做，会导致iPhone4s下页面总宽度多出1像素，从而导致页面可以左右拖动。
+
+![2](http://img2.tbcdn.cn/L1/461/1/67e3514bcf36bd2d13be390a666ed62c1a7dd877.png)
+
+html:
+{% highlight ruby %}
+<div class="box">
+    <div class="left">左侧区块</div>
+    <div class="right">右侧区块</div>
+</div>
+{% endhighlight %}
+
+css:
+{% highlight ruby %}
+.box {
+     display: -webkit-box;
+     display: -webkit-flex;
+     display: flex;
+ }
+ .left, .right {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
+    display: block;
+    width: 1px;
+    height: 40px;
+    position: relative;
+}
+.left {
+    border-right: 1px solid #ccc;
+}
+{% endhighlight %}
+
+可以用伪元素这样写，问题就解决了
+{% highlight ruby %}
+.left:after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background-color: #ccc;
+    display: block;
+    z-index: 9;
+}
+{% endhighlight %}
+
+
+### ios下双击页面空白处会导致页面上移一段距离
+
+解决方案：拦截模拟的双击事件
+
+{% highlight ruby %}
+var lastTouch = 0; //缓存上一次tap的时间
+if(utils.isIOS()){
+  document.body.addEventListener('touchend', function(event) {
+      var nowTouch = new Date().getTime(),
+      delta = nowTouch - lastTouch;
+      if (delta < 500 && delta > 0) {
+          event.preventDefault();
+          return false;
+      }
+      lastTouch = nowTouch;
+  }, false);
+}
+{% endhighlight %}
+
+
+### 其他
+
+1、手机端绑定输入框的keyup事件监听不到【删除】或者【确定】键，会导致输入的内容提交后最后几个字是拼音，建议同时绑定keyup和change。
+
+2、下面这行样式会影响fixed的正常浮动定位功能（如果在fixed元素外层元素设置了这个样式，fixed元素失效。） 
+transform: translate3d(0,0,0);
+
+### 安卓下调试的坑
+
+安卓下调试【提醒我】功能的时候，为了测试到时间提醒，需修改系统时间到开始时间前3分钟，比如：券开抢时间是10月23日10:00，系统时间需调到10月23日 9:57，问题来了，如果不小心把时间调到了10月23日 9:57后（如10月23日 10:57、10月23日 9:58），每次停顿系统时间就会被定格，导致被程序认为已经过了提醒时间，就不会发提醒通知。所以测试时要先调时间，再调日期不容易出错。

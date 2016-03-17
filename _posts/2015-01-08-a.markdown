@@ -1,0 +1,152 @@
+---
+layout: post
+title:  "Hilo实现老虎机"
+date:   2015-01-08 18:00:08
+categories: hilo
+---
+
+开始前先看个效果吧（转换的gif不如实际效果好）。
+
+![_](http://img2.tbcdn.cn/L1/461/1/d0bf6f8026dd89067b748ea0b1abfaeac3b49b7b)
+
+开始的一些准备工作就忽略了，详细实现可以看上一篇[Hilo实现抽奖大转盘](http://www.jeffer.info/hilo/2014/12/31/e.html)
+
+这里面的主要难点是老虎机的三列数字飞速上下滚动效果，还是主要用了缓动Tween来实现，直接开始解释关键交互代码。
+
+下面是一段实现老虎机类的代码，仍然使用了可视对象Bitmap类来表现三列数字和表盘。一般的，不需要使用精灵动画的普通图片对象都可使用此类，只要传入相应的图片image和rect参数即可。
+{% highlight ruby %}
+    Game.Role = Hilo.Class.create({
+        Extends: Hilo.Container,
+        constructor: function () {
+            Game.Role.superclass.constructor.call(this, {
+                width: 162,
+                height: 270,
+                clipChildren: true
+            });
+    
+            this.x = 160;
+            this.y = 0;
+    
+            this.init();
+            
+        },
+        init: function () {
+        
+            // 第1列数字
+            this.numPanel1 = new Hilo.Bitmap({
+                id: 'num1',
+                x: 15,
+                y: 120,
+                rect: [0, 0, 35, 400],
+                image: Game.queue.get('num').content
+            });
+            
+            this.addChild(this.numPanel1);
+    
+            // 第2列数字
+            this.numPanel2 = new Hilo.Bitmap({
+                id: 'num2',
+                x: 63,
+                y: 120,
+                rect: [0, 0, 35, 400],
+                image: Game.queue.get('num').content
+            });
+            
+            this.addChild(this.numPanel2);
+    
+            // 第3列数字
+            this.numPanel3 = new Hilo.Bitmap({
+                id: 'num3',
+                x: 111,
+                y: 120,
+                rect: [0, 0, 35, 400],
+                image: Game.queue.get('num').content
+            });
+            
+            this.addChild(this.numPanel3);
+            
+            // 数字表盘
+            this.panel = new Hilo.Bitmap({
+                id: 'panel',
+                x: 0,
+                y: 0,
+                rect: [0, 0, 162, 270],
+                image: Game.queue.get('panel').content
+            });
+    
+            this.addChild(this.panel);
+        }
+    });
+{% endhighlight %}
+
+上面的代码把表盘拆分成三个数字列和中间带三个镂空框的表盘，这就实现了老虎机的整个表盘结构，如下图所示：
+
+![screenshot](http://img1.tbcdn.cn/L1/461/1/a0c5eed0107be7af304cf3a7989dddd176639f25)
+
+![screenshot](http://img1.tbcdn.cn/L1/461/1/fe448350abf75a6f325eb515177e3dc9292723f7)
+
+左侧图是单列数字的切图，刻度0上面有半个9，刻度9下面有半个0
+
+右侧图片是三个数字列，初始位置停在0刻度上，每列都可以设置不同的转动速度
+
+![screenshot](http://img4.tbcdn.cn/L1/461/1/63e40c236a70b0badb7d5e066d70c0a57de3411d)
+这个表盘覆盖遮挡在数字列上面，中间镂空区域刚好显示出需要看到的数字
+
+### 开始翻滚吧
+
+接下来就是怎么让数字列上下滚动起来了，数字列相对于父容器往Y轴负方向偏移212（这个数字是经过计算出来的，大家可以想想是怎么算的），设置time来实现不同的滚动速度，设置loop:true来做循环偏移，若数字列在120到-212之间不断循环变化时，它们就循环滚动起来了。
+{% highlight ruby %}        
+    gameStart: function(){
+        this.state = 'playing';
+        
+        // 第1列数字
+        this.tween1 = Hilo.Tween.to(Game.role.numPanel1, {y:-212}, {
+            time:800, 
+            loop:true
+        });
+        
+        // 第2列数字
+        this.tween2 = Hilo.Tween.to(Game.role.numPanel2, {y:-212}, {
+            time:600, 
+            loop:true
+        });
+        
+        // 第3列数字
+        this.tween3 = Hilo.Tween.to(Game.role.numPanel3, {y:-212}, {
+            time:1100, 
+            loop:true
+        });
+    }
+
+{% endhighlight %}
+
+下面来结束滚动，循环滚动2秒后停止缓动，然后利用三次方函数实现由快到慢缓动到指定的偏移位置，来告诉你有没有中奖。
+{% highlight ruby %}
+    setTimeout(function(){
+        Game.tween1.stop();
+        Hilo.Tween.to(Game.role.numPanel1, {y:-212}, {
+            time:1000,
+            ease: Ease.Cubic.EaseOut,
+            onComplete: function(){
+                
+            }
+        });
+        Game.tween2.stop();
+        Hilo.Tween.to(Game.role.numPanel2, {y:-212}, {
+            time:1500,
+            ease: Ease.Cubic.EaseOut,
+            onComplete: function(){
+                
+            }
+        });
+        Game.tween3.stop();
+        Hilo.Tween.to(Game.role.numPanel3, {y:-212}, {
+            time:2000,
+            ease: Ease.Cubic.EaseOut,
+            onComplete: function(){
+                
+            }
+        });
+    },2000);
+
+{% endhighlight %}
