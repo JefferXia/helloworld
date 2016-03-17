@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "用rem实现响应式初探"
-date:   2015-10-27 15:00:00
+title:  "用rem实现响应式"
+date:   2015-03-26 17:30:29
 categories: css
 ---
 

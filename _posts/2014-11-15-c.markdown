@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "基于less如何更好地编写公用样式"
-date:   2015-10-27 10:00:00
+date:   2014-11-15 16:56:24
 categories: css
 ---
 

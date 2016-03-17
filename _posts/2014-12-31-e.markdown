@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Hilo实现抽奖大转盘"
-date:   2015-10-27 13:00:00
+date:   2014-12-31 16:49:27
 categories: hilo
 ---
 Hilo可以简单理解为游戏引擎，如果不了解Hilo的可以[看这里](http://hilo-js.github.io/)

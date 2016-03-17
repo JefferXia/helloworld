@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "AngularJs - directive指令初探"
-date:   2015-10-27 11:00:00
+date:   2014-12-05 12:44:06 
 categories: angular
 ---
 directive指令的作用：实现语义化标签

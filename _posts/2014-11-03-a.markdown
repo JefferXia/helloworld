@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "两列展示的图片如何更好地支持响应式"
-date:   2015-10-26 08:00:00
+date:   2014-11-03 17:47:39
 categories: css
 ---
 
