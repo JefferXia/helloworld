@@ -1,0 +1,49 @@
+---
+layout: post
+title:  "移动端如何抓包调试（包含https抓包）"
+date:   2016-05-06 15:07:00
+categories: js
+---
+
+## 移动设备用charles抓包配置代理
+
+IOS手机和安卓手机的配置方式差不多，HTTP代理切换到手动，IP地址为pc端ip，端口号设置为8888
+
+![配置代理](http://img4.tbcdn.cn/L1/461/1/c3f65296de5d832bf0cb614429983d37cc76baaf)
+
+### http抓包
+![charles抓包](http://img2.tbcdn.cn/L1/461/1/7762f9061b00bb0b6a76cbeb04dbdb6127b65286)
+
+### https抓包
+
+当前很多应用都是通过HTTPS加密传输的，普通抓包过来的都是乱码，现介绍使用Charles配置HTTPS请求的步骤如下:
+
+#### 第一步：抓包代理
+
+在iPhone上[设置]->[无线局域网]->[HTTP 代理] 选择[手动], 填入运行Charles的电脑的IP以及Charles服务的端口8888，如下图:
+![设置代理](http://img4.tbcdn.cn/L1/461/1/c3f65296de5d832bf0cb614429983d37cc76baaf)
+
+#### 第二步：手机端安装 SSL CRT 证书
+
+Charles >= 3.10版本
+
+手机浏览器访问：http://www.charlesproxy.com/getssl/ ，附扫码图 ![设置代理](http://aligitlab.oss-cn-hangzhou-zmf.aliyuncs.com/uploads/fengyue/note/b41d975082/image.png) ，会自动跳转到【安装描述文件】。
+
+Charles < 3.10版本
+
+访问 http://www.charlesproxy.com/charles.crt 安装证书
+
+如果用微信扫码，请右上角用safari打开下载证书。下载证书后直接安装即可。
+
+注意：
+
+* IOS建议用 safari浏览器 来安装；
+* Android中建议用chrome 浏览器来安装，因发现再小米手机中用 UC 浏览器安装不了crt 证书。
+
+#### 第三步，设置允许https的域名
+
+在电脑上启动Charles,从菜单依次选择[Proxy]->[SSL Proxy Settings], 弹出设置窗口后选择[SSL]选项卡，勾选[Enable SSL Proxing]，并在下面的Location中Add需要分析的URL所以在域名和端口443，示例如下图。
+
+![设置代理](http://img4.tbcdn.cn/L1/461/1/f7de0924350f39c5eae19ee2d0593f805bfe85bc)
+
+
