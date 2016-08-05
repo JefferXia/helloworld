@@ -20,14 +20,13 @@ IOS手机和安卓手机的配置方式差不多，HTTP代理切换到手动，I
 
 #### 第一步：抓包代理
 
-在iPhone上[设置]->[无线局域网]->[HTTP 代理] 选择[手动], 填入运行Charles的电脑的IP以及Charles服务的端口8888，如下图:
-![设置代理](http://img4.tbcdn.cn/L1/461/1/c3f65296de5d832bf0cb614429983d37cc76baaf)
+在iPhone上[设置]->[无线局域网]->[HTTP 代理] 选择[手动], 填入运行Charles的电脑的IP以及Charles服务的端口8888
 
 #### 第二步：手机端安装 SSL CRT 证书
 
 Charles >= 3.10版本
 
-手机浏览器访问：http://www.charlesproxy.com/getssl/ ，附扫码图 ![设置代理](http://aligitlab.oss-cn-hangzhou-zmf.aliyuncs.com/uploads/fengyue/note/b41d975082/image.png) ，会自动跳转到【安装描述文件】。
+手机浏览器访问：http://www.charlesproxy.com/getssl/ ，会自动跳转到【安装描述文件】。附扫码图 ![设置代理](http://aligitlab.oss-cn-hangzhou-zmf.aliyuncs.com/uploads/fengyue/note/b41d975082/image.png) 
 
 Charles < 3.10版本
 
@@ -46,4 +45,35 @@ Charles < 3.10版本
 
 ![设置代理](http://img4.tbcdn.cn/L1/461/1/f7de0924350f39c5eae19ee2d0593f805bfe85bc)
 
+## 移动端IOS开发者模式调试
 
+### iphone + safari + 数据线 + 移动设备开启开发者模式
+
+#### 第一步
+![111](http://img3.tbcdn.cn/L1/461/1/f725e7118b8d37647b77df01abd8a637bdb40616)
+
+#### 第二步
+![222](http://img2.tbcdn.cn/L1/461/1/66aed518c293e01e00a2d077847c8eac3e8aa698)
+
+#### 第三步
+![333](http://img1.tbcdn.cn/L1/461/1/2019c61ec13c3ab63dfeb3ab8d4916a3065f7687)
+
+#### 第四步
+![444](http://img4.tbcdn.cn/L1/461/1/b9b801ca3b5a3888bad0e4af1930a79f2867fff2)
+
+#### 第五步
+safari依次选择[菜单栏]->[开发]->[iphone]
+
+备注：如果调试的页面是内嵌在App里的webview，由于IOS的封闭策略限制，需要测试的手机设备的device ID，加入开发者名单。
+
+#### 如何获取iphone手机上的deviceID
+
+将i-设备连接到PC或者MAC
+
+1、iTunes启动后，点击左侧栏中的设备
+
+2、点击设备的“概要”，然后点击"序列号", 这时候会从"序列号"转换成"标识符UDID"
+
+3、如果需要把号码copy出来的话，可以通过屏幕最上端的菜单，选择编辑，拷贝，然后打开记事本程序，粘贴即可。即使你看不到选择上了任何东西，仍然可以拷贝。 
+
+4、DeviceID为40位16进制字符串，例如：0123456789abcdef0123abcdef3219876543210。每个设备号码不同。
