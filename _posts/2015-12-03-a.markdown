@@ -5,6 +5,67 @@ date:   2015-12-03 17:39:16
 categories: mobile
 ---
 
+### 移动端浏览器300毫秒点击延时
+
+#### 解决方案
+
+1. 禁止页面缩放
+
+由于双击缩放仅对于可被缩放的页面有存在意义，那么对于不可缩放的页面，就可以直接去掉点击延时。
+
+Android 平台的 Chrome 32 及以上版本浏览器和 Firefox 浏览器率先支持了这一特性。
+
+通过设置页面的 meta 标签来禁止页面缩放：
+
+{% highlight ruby %}
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+{% endhighlight %}
+
+2. 禁止双击缩放
+
+在 Chrome 32 及以上版本中，他们将在包含 width=device-width 或者置为比 viewport 值更小的页面上禁用双击缩放：
+
+{% highlight ruby %}
+<meta name="viewport" content="width=device-width">
+{% endhighlight %}
+
+在 IE10 和 IE11 通过设置 touch-action 这个CSS属性来禁止双击缩放：
+
+{% highlight ruby %}
+body {
+    -ms-touch-action: none; /* IE10 */
+    touch-action: none;     /* IE11 */
+}
+{% endhighlight %}
+
+3. FastClick
+
+FastClick是FT Labs专门为解决移动端浏览器 300 毫秒点击延迟问题所开发的一个轻量级的库。简而言之，FastClick 在检测到 touchend 事件的时候，会通过 DOM 自定义事件立即触发一个模拟 click 事件，并把浏览器在 300 毫秒之后真正触发的click事件阻止掉。
+
+FastClick 的使用方法非常简单，在 window load 事件之后，在body上调用FastClick.attach()即可。
+
+{% highlight ruby %}
+window.addEventListener( "load", function() {
+    FastClick.attach( document.body );
+}, false );
+{% endhighlight %}
+
+attach方法虽可在更具体的元素上调用，直接绑定到body上可以确保整个应用都能受益。当 FastClick 检测到当前页面使用meta设置了user-scalable=no或者 touch-action 属性的解决方案时，会静默退出。可以说，这是真正的跨平台方案出来之前一种很好的变通方案。
+
+4. 奇技淫巧
+
+tap点击后生成一个透明的遮罩层来阻止点击穿透。
+
+{% highlight ruby %}
+stopEventTap: function () {
+    var $el = $('<div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 99999; "></div>');
+    $('body').append($el);
+    setTimeout(function () {
+        $el.remove();
+    }, 500);
+}
+{% endhighlight %}
+
 ### 移动端无法准确判断出checkbox的选中状态
 
 在移动端，checkbox选中状态下获取的.attr(‘checked’) 或者prop(‘checked’) 并不总是 true，如果点击快一点经常会失准，实际交互中会导致选中了但没触发后续动作。 
@@ -107,6 +168,43 @@ if(utils.isIOS()){
 2、下面这行样式会影响fixed的正常浮动定位功能（如果在fixed元素外层元素设置了这个样式，fixed元素失效。） 
 transform: translate3d(0,0,0);
 
-### 安卓下调试的坑
+3、消除transition闪屏
 
-安卓下调试【提醒我】功能的时候，为了测试到时间提醒，需修改系统时间到开始时间前3分钟，比如：券开抢时间是10月23日10:00，系统时间需调到10月23日 9:57，问题来了，如果不小心把时间调到了10月23日 9:57后（如10月23日 10:57、10月23日 9:58），每次停顿系统时间就会被定格，导致被程序认为已经过了提醒时间，就不会发提醒通知。所以测试时要先调时间，再调日期不容易出错。
+两个方法：使用css3动画的时尽量利用3D加速，从而使得动画变得流畅。动画过程中的动画闪白可以通过 backface-visibility 隐藏。
+
+{% highlight ruby %}
+-webkit-transform-style: preserve-3d;
+/*设置内嵌的元素在 3D 空间如何呈现：保留 3D*/
+-webkit-backface-visibility: hidden;
+/*（设置进行转换的元素的背面在面对用户时是否可见：隐藏）*/
+{% endhighlight %}
+
+4、Andriod 上去掉语音输入按钮
+
+{% highlight ruby %}
+input::-webkit-input-speech-button {display: none}
+{% endhighlight %}
+
+5、IP5的媒体查询
+
+{% highlight ruby %}
+@media (device-height: 568px) and (-webkit-min-device-pixel-ratio: 2) {
+
+/* iPhone 5 or iPod Touch 5th generation */
+
+}
+{% endhighlight %}
+
+媒体查询，响应不同启动图片
+
+{% highlight ruby %}
+<link href="startup-568h.png" rel="apple-touch-startup-image" media="(device-height: 568px)">
+<link href="startup.png" rel="apple-touch-startup-image" sizes="640x920" media="(device-height: 480px)">
+{% endhighlight %}
+
+6、关于 iOS 系统中，中文输入法输入英文时，字母之间可能会出现一个六分之一空格。可以通过正则去掉
+
+{% highlight ruby %}
+this.value = this.value.replace(/\u2006/g, '');
+{% endhighlight %}
+
