@@ -21,6 +21,7 @@ web动画技术方案大致可以分为以下几类
 | Canvas  | 点线面全能 |  依赖GPU  |  较好  |
 | webgl  | 十项全能 |  重度依赖GPU  |  非常好 |
 
+
 ### 动画种类
 #### 常见的动画
 - 位移动画 translate
@@ -123,14 +124,20 @@ p = x*i+y*j+z*k+w
 
 #### 欧拉角
 最常用的描述物体旋转的方法
+
 ![欧拉角](https://ata2-img.cn-hangzhou.oss-pub.aliyun-inc.com/5815b82b969297283d48c617d64fa69e.png)
 
 #### 矩阵
 三维空间的缔造者
+
 位移矩阵          缩放矩阵          X轴旋转矩阵
+
 |1  0  0  tx|   |sx  0   0  0|   |1   0     0    0|
+
 |0  1  0  ty|   |0   sy  0  0|   |0  cosβ  sinβ  0|
+
 |0  0  1  tz|   |0   0   sz 0|   |0 -sinβ  cosβ  0|
+
 |0  0  0   1|   |0   0   0  1|   |0   0     0    1|
 
 #### 其他还有
@@ -145,7 +152,11 @@ p = x*i+y*j+z*k+w
 
 ### 参考资料
 [SVG 应用指南](https://svgontheweb.com/zh/)
+
 [How To Animate Element Along SVG Path](icanbecreative.com/article/animate-element-along-svg-path/)
+
 [SVG Gooey Effect](https://css-tricks.com/gooey-effect/)
+
 [animejs](https://animejs.com/documentation/)
+
 [WebGL，真正进入三维的世界](https://cloud.tencent.com/developer/article/1005103)
