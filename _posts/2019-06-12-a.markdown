@@ -1,0 +1,151 @@
+---
+layout: post
+title:  "WEB动画之道"
+date:   2019-06-12 12:17:00
+categories: 动画
+---
+
+作为前端，对动画一定不陌生，以前对动画的理解仅限于css的animation、transform，或者用精灵图sprite按照一定的序列帧顺序，一定的速度逐帧播放实现的动画效果，其实实现动画的方式还有很多，动画的本质是让虚拟世界中的元素模拟真实世界中物体的运动，比如人的走动、重力作用下的球的抛物线运动、随风摆动的花朵、烟花扩散效果等等，在实际情况中如何灵活应用至关重要。
+
+### 动画技术方案
+web动画技术方案大致可以分为以下几类
+
+- CSS3动画
+- SVG动画
+- canvas动画
+
+| 方案      |    优势 |  缺点  |  性能  |
+| :------- | :-------| :------- | :------- |
+| CSS3  | 简单、支持广 |  渲染量少  |   差  |
+| SVG  | 矢量、线条 |  兼容性  |  一般  |
+| Canvas  | 点线面全能 |  依赖GPU  |  较好  |
+| webgl  | 十项全能 |  重度依赖GPU  |  非常好 |
+
+### 动画种类
+#### 常见的动画
+- 位移动画 translate
+- 旋转动画 rotate
+- 斜切动画 skew
+- 缩放动画 scale
+- 样式属性变化
+
+![常见的动画](https://ata2-img.cn-hangzhou.oss-pub.aliyun-inc.com/d43baec556f01236dd49ae062e528f00.gif)
+
+水平垂直移动、旋转、缩放、淡入淡出这些都是web页面上常见的动效，也是最容易实现的，这些以2D动画为主，借助CSS3中的 Transition (过渡)、Transform（变形）实现变化，有一个非常好用的 CSS 动画库 ——[Animate.css](https://daneden.github.io/animate.css/) ，可以节省不少精力。
+
+### 线条动画
+说到线条动画，就一定避不开SVG，它可以说在web动画方面是一个非常厉害的轻武器，SVG中有个比较重要的属性分支，名为stroke，中文软件中称之为“描边”，通过描边，可以实现由线条组成的各种各样形状的物体图案，再通过路径和锚点的改变，来实现线条的变化。
+
+![线条动画](https://ata2-img.cn-hangzhou.oss-pub.aliyun-inc.com/03f997e3d00c6baeb7a5af89afad6042.png)
+
+{% highlight ruby %}
+<svg viewBox="0 0 960 200">
+    <rect x="40.2" y="25.3" width="150" height="150"/>
+
+    <circle cx="354.4" cy="100.3" r="75"/>
+
+    <polygon points="593.6,25.3 617.9,74.7 672.4,82.6 633,121.1 642.3,175.3
+        593.6,149.7 544.8,175.3 554.1,121.1 514.7,82.6 569.2,74.7 "/>
+
+    <path d="M923,107.3C11.5,41.5 51.2,38.8 66.5,29.5C829,120
+        836.9,77.9 810,63.3C21.5 11.6 59 5 67.5,33.5"/>
+</svg>
+{% endhighlight %}
+
+SVG动画简而言之就是在SVG代码中插入<animate>元素，从而可以给路径或者是形状添加动画效果。SVG的强大之处在于，其本身也是个HTML元素，能被CSS属性控制，处理传统的高宽定位、边框背景色等，SVG自身的一些特殊属性也能被CSS支持，甚至在CSS3 animation动画中。线条动画完全可以用SVG动画实现，效果流畅充满柔性美。
+
+![svg](https://ata2-img.cn-hangzhou.oss-pub.aliyun-inc.com/ae35bc3a85547f866307048bfc1bd05b.gif)
+
+另外SVG 也能使用雪碧图的技术，而且有一个额外的好处是我们不再需要为高清屏准备额外的2倍3倍图。因为SVG与分辨率无关，也就是说在任何设备上SVG都能清晰的显示。并且使用SVG还能节省HTTP请求。大部分浏览器都支持SVG动画，不过 Internet Explorer不支持 SVG 动画。
+SVG 实现的动画比较局部和小巧，使用范围也比较狭窄，但是当我们实现复杂的线条动画，甚至游戏的时候，就还是需要用 Canvas 来实现。
+
+### 逐帧动画
+逐帧动画在维基百科的定义是一种动画技术，其原理即将每帧不同的图像连续播放，从而产生动画效果。
+而评价动画流不流畅，就是动画看上去不卡顿、抖动，帧率能够达到50~60fps的动画将会相当流畅，帧率在30fps以下的动画，会让人感觉到明显的卡顿。
+目前针对逐帧动画的渲染引擎还是比较多的，比如大名鼎鼎的PixiJS、集团内部的Hilo、 CreateJS等等，都提供了逐帧动画的方案。
+
+### 骨骼动画
+如果说逐帧动画表现不出人物的逼真性，那么骨骼动画一定可以。骨骼动画的制作是比较复杂的，还好业界有成熟的工具—两款比较著名的 2D 骨骼动画制作软件：Spine 和 DragonBones 。 拖动骨骼组合角色，设置简单的动画关键帧，依靠强大的自动补间和骨骼关系，就可以制作出逼真生动的canvas骨骼动画。
+
+![骨骼动画](https://ata2-img.cn-hangzhou.oss-pub.aliyun-inc.com/282ea38705760498db8491b968be6f6c.gif)
+
+### 3D动画
+3D和2D最大的区别就是多了一根Z轴，怎样才能绘制出一个三维图形呢？要绘制出三维图像，我们首先要知道三维图像和二维图像有那些区别。
+
+![3d](https://ata2-img.cn-hangzhou.oss-pub.aliyun-inc.com/951135793738baab3088fe255c8d7541.png)
+
+从上面这幅图，我们可以比较直观的看到一个正方形到立方体的演变过程，主要经历了以下四步：
+1. 给图像加入深度信息，也就是让这个正方形有了厚度，从一个“面”成为一个“体”
+2. 换一个角度去观察我们的场景（45度俯瞰），这使得深度信息在视觉上得到了体现
+3. 光有深度信息还不够，我们观察三维图像一般是带透视的，这样图像更有立体感
+4. 最后需要在场景中加入灯光，给立方体打个光会更真实
+
+这样我们就有了一个大致的方向，为了绘制三维图形，我们需要一下四部分信息：
+- 获取立方体的顶点数据，包含深度信息（即z轴坐标）
+- 获取视图变换矩阵，用来模拟摄像机在不同角度的拍摄
+- 获取透视变换矩阵，用来模拟现实中近大远小的透视效果
+- 获取灯光数据，这里得到的是一个点光源，类似白炽灯
+
+![3d动画](https://ata2-img.cn-hangzhou.oss-pub.aliyun-inc.com/dd55280da7535da859c00e37f41cddff.gif)
+
+如果要用基于欧拉角的4*4矩阵去写，可能需要几百行代码，不过现在3D渲染引擎也已经很成熟了，即便你对底层算法不熟悉，也可以很轻松的实现简单的三维物体。就拿Hilo3D来说，用Hilo3D写一个旋转的立方体，核心代码如下。
+
+{% highlight ruby %}
+var boxGeometry = new Hilo3d.BoxGeometry();
+boxGeometry.setAllRectUV([[0, 1], [1, 1], [1, 0], [0, 0]]);
+
+var colorBox = new Hilo3d.Mesh({
+  geometry: boxGeometry,
+  material: new Hilo3d.BasicMaterial({
+    diffuse: new Hilo3d.Color(0.8, 0, 0)
+  }),
+  x: -1,
+  onUpdate: function() {
+    this.rotationX += .5;
+    this.rotationY += .5;
+  }
+});
+stage.addChild(colorBox);
+{% endhighlight %}
+
+### 关于WebGL
+WebGL真正强大的地方，在于它为我们提供了三维图像的绘制能力。当然这主要的得益于WebGL的计算速度，要知道，绘制三维图形，我们需要进行大量的（逐顶点甚至是逐片元）的矩阵运算，而且这些运算都必须在16ms内完成，才能保证画面的流畅。如果是直接使用Canvas 2D Api绘制三维图像，所有这些运算，只能在CPU中完成。而通过WebGL，这些耗时的运算就可以直接交给GPU，通过GPU中一些专用的硬件，使得运算的过程得到优化（管线，并行）。
+
+### 动画相关算法
+可以说WEB动画是一个非常绚烂又深邃的领域，担负着真实世界虚拟化的使命，涉及到知识面也很广，包含数学、物理、信号、图像，越复杂的动画或游戏需要积累的知识也越多，所以在平时应该多学习积累这些方面的知识以备不时之需。
+#### 四元数：
+
+```
+// 三维空间旋转的基础
+// 能够进行球面插值
+p = x*i+y*j+z*k+w
+```
+
+#### 欧拉角
+最常用的描述物体旋转的方法
+![欧拉角](https://ata2-img.cn-hangzhou.oss-pub.aliyun-inc.com/5815b82b969297283d48c617d64fa69e.png)
+
+#### 矩阵
+三维空间的缔造者
+位移矩阵          缩放矩阵          X轴旋转矩阵
+|1  0  0  tx|   |sx  0   0  0|   |1   0     0    0|
+|0  1  0  ty|   |0   sy  0  0|   |0  cosβ  sinβ  0|
+|0  0  1  tz|   |0   0   sz 0|   |0 -sinβ  cosβ  0|
+|0  0  0   1|   |0   0   0  1|   |0   0     0    1|
+
+#### 其他还有
+- 柏林噪声
+- 高阶brezier实时算法（二维、三维）
+- boids仿生算法
+- 三角函数
+- 动量、冲量
+- 物体运动的模拟
+- 向量知识
+- 光线追踪 等等，这些不在这里展开，可以自己动手去实现一些小demo
+
+### 参考资料
+[SVG 应用指南](https://svgontheweb.com/zh/)
+[How To Animate Element Along SVG Path](icanbecreative.com/article/animate-element-along-svg-path/)
+[SVG Gooey Effect](https://css-tricks.com/gooey-effect/)
+[animejs](https://animejs.com/documentation/)
+[WebGL，真正进入三维的世界](https://cloud.tencent.com/developer/article/1005103)
